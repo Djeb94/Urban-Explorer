@@ -2,11 +2,11 @@ import requests, os
 import pandas as pd
 
 URL = "https://www.data.gouv.fr/api/1/datasets/r/d7933994-2c66-4131-a4da-cf7cd18040a4"
-PATH = "data/bronze/dvf_raw.csv.gz"
+PATH = "../data/bronze/dvf_raw.csv.gz"
 
 if not os.path.exists(PATH):
     print("Téléchargement en cours (499 Mo)...")
-    os.makedirs("data/bronze", exist_ok=True)
+    os.makedirs("../data/bronze", exist_ok=True)
     r = requests.get(URL, stream=True)
     with open(PATH, "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
