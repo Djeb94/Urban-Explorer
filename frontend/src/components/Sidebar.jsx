@@ -31,7 +31,7 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
       {/* Titre */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
-          🏙️ Urban Data Explorer
+          Urban Data Explorer
         </h1>
         <p style={{ fontSize: 12, color: "#8892a4", marginTop: 4 }}>
           Paris — Données immobilières
