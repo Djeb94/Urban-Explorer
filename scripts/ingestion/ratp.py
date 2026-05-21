@@ -19,7 +19,7 @@ if not os.path.exists(BRONZE_PATH):
     print("Téléchargement stations IDF Mobilités...")
     r = requests.get(URL, timeout=60)
     print(f"Status : {r.status_code} — taille : {len(r.content)} octets")
-    with open(BRONZE_PATH, "wb") as f:
+    with open(BRONZE_PATH, "wb") as f:  
         f.write(r.content)
     print("✓ Téléchargé")
 else:
