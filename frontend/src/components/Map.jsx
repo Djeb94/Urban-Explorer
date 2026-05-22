@@ -7,22 +7,21 @@ const API = "http://localhost:8000"
 
 const LABELS = {
   accessibilite_achat: "Accessibilité à l'achat",
-  pression_immo: "Pression immobilière",
-  score_attractivite: "Score attractivité",
-  mixite_sociale: "Mixité sociale"
+  score_vivabilite:    "Vivabilité urbaine",
+  score_attractivite:  "Score attractivité",
+  mixite_sociale:      "Mixité sociale"
 }
 
-function getColor(value, min, max) {
-  const t = (value - min) / (max - min)
-  const r = Math.round(255 * t)
-  const b = Math.round(255 * (1 - t))
-  return `rgb(${r}, 50, ${b})`
-}
-
-export default function Map({ data, selected, setSelected, indicateur }) {
+export default function Map({ data, selected, compared, setSelected, indicateur }) {
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
+  const popupRef = useRef(null)
   const [contours, setContours] = useState(null)
+  const indicateurRef = useRef(indicateur)
+  const setSelectedRef = useRef(setSelected)
+
+  useEffect(() => { indicateurRef.current = indicateur }, [indicateur])
+  useEffect(() => { setSelectedRef.current = setSelected }, [setSelected])
 
   useEffect(() => {
     axios.get(`${API}/contours`).then(res => setContours(res.data))
@@ -37,6 +36,7 @@ export default function Map({ data, selected, setSelected, indicateur }) {
       zoom: 11.5
     })
     mapInstance.current.addControl(new maplibregl.NavigationControl(), "top-right")
+    popupRef.current = new maplibregl.Popup({ closeButton: false, closeOnClick: false })
     return () => mapInstance.current.remove()
   }, [])
 
@@ -45,7 +45,7 @@ export default function Map({ data, selected, setSelected, indicateur }) {
     const map = mapInstance.current
 
     const addLayers = () => {
-      const values = data.map(d => d[indicateur]).filter(Boolean)
+      const values = data.map(d => d[indicateur]).filter(v => v !== null && v !== undefined)
       const min = Math.min(...values)
       const max = Math.max(...values)
 
@@ -65,59 +65,74 @@ export default function Map({ data, selected, setSelected, indicateur }) {
         })
       }
 
-      if (map.getSource("arrondissements")) {
-        map.getSource("arrondissements").setData(geojson)
-      } else {
-        map.addSource("arrondissements", { type: "geojson", data: geojson })
+      if (map.getLayer("fill-arr"))         map.removeLayer("fill-arr")
+      if (map.getLayer("border-arr"))       map.removeLayer("border-arr")
+      if (map.getSource("arrondissements")) map.removeSource("arrondissements")
 
-        map.addLayer({
-          id: "fill-arr",
-          type: "fill",
-          source: "arrondissements",
-          paint: {
-            "fill-color": [
-              "interpolate", ["linear"],
-              ["get", "value"],
-              min, "#1a237e",
-              max, "#f44336"
-            ],
-            "fill-opacity": 0.7
-          }
-        })
+      map.addSource("arrondissements", { type: "geojson", data: geojson })
 
-        map.addLayer({
-          id: "border-arr",
-          type: "line",
-          source: "arrondissements",
-          paint: { "line-color": "#ffffff", "line-width": 1 }
-        })
+      map.addLayer({
+        id: "fill-arr",
+        type: "fill",
+        source: "arrondissements",
+        paint: {
+          "fill-color": [
+            "interpolate", ["linear"],
+            ["get", "value"],
+            min, "#1a237e",
+            max, "#f44336"
+          ],
+          "fill-opacity": 0.7
+        }
+      })
 
-        map.on("click", "fill-arr", e => {
-          const arr = e.features[0].properties.arrondissement
-          setSelected(arr)
-        })
+      map.addLayer({
+        id: "border-arr",
+        type: "line",
+        source: "arrondissements",
+        paint: { "line-color": "#ffffff", "line-width": 1 }
+      })
 
-        map.on("mouseenter", "fill-arr", () => {
-          map.getCanvas().style.cursor = "pointer"
-        })
-        map.on("mouseleave", "fill-arr", () => {
-          map.getCanvas().style.cursor = ""
-        })
-      }
+      map.off("click", "fill-arr")
+      map.off("mousemove", "fill-arr")
+      map.off("mouseleave", "fill-arr")
+
+      map.on("click", "fill-arr", e => {
+        const arr = e.features[0].properties.arrondissement
+        setSelectedRef.current(arr)
+      })
+
+      map.on("mousemove", "fill-arr", e => {
+        map.getCanvas().style.cursor = "pointer"
+        const arr = e.features[0].properties.arrondissement
+        const val = e.features[0].properties.value
+        popupRef.current
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div style="background:#161b27;padding:8px 12px;border-radius:6px;color:white;font-size:13px;border:1px solid #3b82f6">
+              <b>${arr}ème arrondissement</b><br/>
+              <span style="color:#60a5fa">${LABELS[indicateurRef.current]} : ${Number(val).toFixed(2)}</span>
+            </div>
+          `)
+          .addTo(map)
+      })
+
+      map.on("mouseleave", "fill-arr", () => {
+        map.getCanvas().style.cursor = ""
+        popupRef.current.remove()
+      })
     }
 
-    if (map.isStyleLoaded()) {
-      addLayers()
-    } else {
-      map.on("load", addLayers)
-    }
+    if (map.isStyleLoaded()) addLayers()
+    else map.on("load", addLayers)
+
   }, [contours, data, indicateur])
 
   return (
-    <div style={{ flex: 1, position: "relative" }}>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
       <div style={{
-        position: "absolute", bottom: 30, right: 10,
+        position: "absolute", bottom: 10, right: 10,
         background: "rgba(0,0,0,0.7)", padding: "10px",
         borderRadius: 8, fontSize: 12
       }}>

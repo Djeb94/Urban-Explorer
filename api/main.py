@@ -107,3 +107,35 @@ def get_stations():
 def get_contours():
     data = list(mongo["contours"].find({}, {"_id": 0}))
     return {"type": "FeatureCollection", "features": data}
+
+@app.get("/timeline/{arrondissement}", tags=["Timeline"])
+def get_timeline(arrondissement: int):
+    with engine.connect() as conn:
+        df = pd.read_sql(
+            text("""
+                SELECT annee,
+                       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY prix_m2) as prix_m2_median,
+                       COUNT(*) as nb_transactions
+                FROM transactions
+                WHERE arrondissement = :arr
+                GROUP BY annee
+                ORDER BY annee
+            """),
+            conn, params={"arr": arrondissement}
+        )
+    return df.to_dict(orient="records")
+
+@app.get("/timeline", tags=["Timeline"])
+def get_timeline_paris():
+    with engine.connect() as conn:
+        df = pd.read_sql(
+            text("""
+                SELECT annee, arrondissement,
+                       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY prix_m2) as prix_m2_median
+                FROM transactions
+                GROUP BY annee, arrondissement
+                ORDER BY arrondissement, annee
+            """),
+            conn
+        )
+    return df.to_dict(orient="records")

@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
+import Charts from "./Charts"
 
 const API = "http://localhost:8000"
 
 const INDICATEURS = [
   { value: "accessibilite_achat", label: "Accessibilité à l'achat", route: "ind1" },
-  { value: "pression_immo",       label: "Pression immobilière",    route: "ind2" },
-  { value: "score_attractivite",  label: "Score attractivité",      route: "ind3" },
-  { value: "mixite_sociale",      label: "Mixité sociale",          route: "ind4" }
+  { value: "score_vivabilite",    label: "Vivabilité urbaine",       route: "ind2" },
+  { value: "score_attractivite",  label: "Score attractivité",       route: "ind3" },
+  { value: "mixite_sociale",      label: "Mixité sociale",           route: "ind4" }
 ]
 
-export default function Sidebar({ data, selected, indicateur, setIndicateur, ind1, ind2, ind3, ind4 }) {
+export default function Sidebar({ data, selected, compared, indicateur, setIndicateur, compareMode, setCompareMode, setSelected, setCompared }) {
   const [detail, setDetail] = useState(null)
 
   useEffect(() => {
@@ -28,7 +29,6 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
       borderRight: "1px solid #2a2f3e"
     }}>
 
-      {/* Titre */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>
           Urban Data Explorer
@@ -38,8 +38,7 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
         </p>
       </div>
 
-      {/* Sélecteur indicateur */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 12 }}>
         <p style={{ fontSize: 11, color: "#8892a4", marginBottom: 8, textTransform: "uppercase" }}>
           Indicateur
         </p>
@@ -56,8 +55,30 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
         ))}
       </div>
 
-      {/* Détail arrondissement sélectionné */}
-      {selected && detail && (
+      <button onClick={() => { setCompareMode(!compareMode); setCompared(null); setSelected(null) }} style={{
+        display: "block", width: "100%", textAlign: "center",
+        padding: "8px 12px", marginBottom: 16, borderRadius: 6,
+        border: `1px solid ${compareMode ? "#f44336" : "#3b82f6"}`,
+        cursor: "pointer", fontSize: 13,
+        background: compareMode ? "#f4433620" : "#3b82f620",
+        color: compareMode ? "#f44336" : "#3b82f6"
+      }}>
+        {compareMode ? "Quitter comparaison" : "Mode comparaison"}
+      </button>
+
+      {compareMode && (
+        <div style={{
+          background: "#1e2433", borderRadius: 8, padding: 12,
+          marginBottom: 16, fontSize: 12, color: "#8892a4",
+          border: "1px solid #3b82f6"
+        }}>
+          {!selected && <p>Cliquez sur un 1er arrondissement</p>}
+          {selected && !compared && <p>Cliquez sur un 2ème arrondissement<br/><b style={{color:"#3b82f6"}}>{selected}ème sélectionné</b></p>}
+          {selected && compared && <p><b style={{color:"#3b82f6"}}>{selected}ème</b> vs <b style={{color:"#f44336"}}>{compared}ème</b></p>}
+        </div>
+      )}
+
+      {selected && detail && !compareMode && (
         <div style={{
           background: "#1e2433", borderRadius: 8, padding: 16, marginBottom: 20,
           border: "1px solid #3b82f6"
@@ -81,7 +102,8 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
         </div>
       )}
 
-      {/* Classement */}
+      {!compareMode && <Charts selected={selected} />}
+
       <div>
         <p style={{ fontSize: 11, color: "#8892a4", marginBottom: 8, textTransform: "uppercase" }}>
           Classement
@@ -90,7 +112,8 @@ export default function Sidebar({ data, selected, indicateur, setIndicateur, ind
           <div key={row.arrondissement} style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "6px 10px", marginBottom: 3, borderRadius: 6, cursor: "pointer",
-            background: selected === row.arrondissement ? "#3b82f6" : "#1e2433",
+            background: selected === row.arrondissement ? "#3b82f6" :
+                        compared === row.arrondissement ? "#f44336" : "#1e2433",
             fontSize: 12
           }}>
             <span style={{ color: "#8892a4", width: 20 }}>{i + 1}</span>

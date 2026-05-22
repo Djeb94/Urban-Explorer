@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import Map from "./components/Map"
 import Sidebar from "./components/Sidebar"
+import Compare from "./components/Compare"
 import "./App.css"
 
 const API = "http://localhost:8000"
@@ -12,7 +13,9 @@ export default function App() {
   const [ind3, setInd3] = useState([])
   const [ind4, setInd4] = useState([])
   const [selected, setSelected] = useState(null)
+  const [compared, setCompared] = useState(null)
   const [indicateur, setIndicateur] = useState("accessibilite_achat")
+  const [compareMode, setCompareMode] = useState(false)
 
   useEffect(() => {
     axios.get(`${API}/ind1`).then(res => setInd1(res.data))
@@ -23,10 +26,20 @@ export default function App() {
 
   const getData = () => {
     if (indicateur === "accessibilite_achat") return ind1
-    if (indicateur === "pression_immo")       return ind2
+    if (indicateur === "score_vivabilite")    return ind2
     if (indicateur === "score_attractivite")  return ind3
     if (indicateur === "mixite_sociale")      return ind4
     return ind1
+  }
+
+  const handleSelect = (arr) => {
+    if (compareMode) {
+      if (!selected) setSelected(arr)
+      else if (arr !== selected) setCompared(arr)
+    } else {
+      setSelected(arr)
+      setCompared(null)
+    }
   }
 
   return (
@@ -34,16 +47,34 @@ export default function App() {
       <Sidebar
         data={getData()}
         selected={selected}
+        compared={compared}
         indicateur={indicateur}
         setIndicateur={setIndicateur}
-        ind1={ind1} ind2={ind2} ind3={ind3} ind4={ind4}
-      />
-      <Map
-        data={getData()}
-        selected={selected}
+        compareMode={compareMode}
+        setCompareMode={setCompareMode}
         setSelected={setSelected}
-        indicateur={indicateur}
+        setCompared={setCompared}
       />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+          <Map
+            data={getData()}
+            selected={selected}
+            compared={compared}
+            setSelected={handleSelect}
+            indicateur={indicateur}
+          />
+        </div>
+        {compareMode && selected && compared && (
+          <div style={{ height: 280, flexShrink: 0 }}>
+            <Compare
+              selected={selected}
+              compared={compared}
+              indicateur={indicateur}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
