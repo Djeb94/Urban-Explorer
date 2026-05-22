@@ -21,7 +21,7 @@ if not os.path.exists(BRONZE_PATH):
     print(f"Status : {r.status_code} — taille : {len(r.content)} octets")
     with open(BRONZE_PATH, "wb") as f:  
         f.write(r.content)
-    print("✓ Téléchargé")
+    print("Téléchargé")
 else:
     print("Fichier bronze déjà présent")
 
@@ -64,8 +64,8 @@ stations_par_arr = (
     .reset_index(drop=True)
 )
 
-print("\n✓ Stations par arrondissement :")
+print("\n Stations par arrondissement :")
 print(stations_par_arr.to_string())
 
 stations_par_arr.to_csv(SILVER_PATH, index=False)
-print(f"\n✓ Silver sauvegardé — {len(stations_par_arr)} arrondissements")
+print(f"\n Silver sauvegardé — {len(stations_par_arr)} arrondissements")
