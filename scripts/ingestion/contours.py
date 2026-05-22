@@ -13,7 +13,7 @@ data = r.json()
 with open(PATH, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False)
 
-print(f"✓ {len(data['features'])} arrondissements sauvegardés")
+print(f" {len(data['features'])} arrondissements sauvegardés")
 
 # Vérification rapide
 for feature in data["features"][:3]:

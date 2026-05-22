@@ -10,13 +10,12 @@ with open("data/bronze/espaces_verts_raw.csv", "wb") as f:
 
 df = pd.read_csv("data/bronze/espaces_verts_raw.csv", sep=";")
 
-# Code postal est un float genre 75011.0 → on convertit
 df["cp"] = pd.to_numeric(df["Code postal"], errors="coerce")
 df = df[df["cp"].between(75001, 75020)]
 df["arrondissement"] = (df["cp"] % 100).astype(int)
 df["surface"] = pd.to_numeric(df["Surface calculée"], errors="coerce").fillna(0)
 
-# Agréger par arrondissement
+#agréger par arrondissement
 result = df.groupby("arrondissement").agg(
     nb_espaces_verts=("Identifiant espace vert", "count"),
     surface_totale_m2=("surface", "sum")

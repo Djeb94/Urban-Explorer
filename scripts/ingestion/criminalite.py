@@ -5,35 +5,32 @@ URL = "https://static.data.gouv.fr/resources/bases-statistiques-communale-depart
 PATH_RAW = "data/bronze/criminalite_raw.csv.gz"
 
 if not os.path.exists(PATH_RAW):
-    print("Téléchargement...")
     os.makedirs("data/bronze", exist_ok=True)
     r = requests.get(URL, stream=True)
     with open(PATH_RAW, "wb") as f:
         for chunk in r.iter_content(chunk_size=1024*1024):
             f.write(chunk)
-    print("✓ Téléchargé")
 
-# Lecture
 df = pd.read_csv(PATH_RAW, compression="gzip", dtype=str, sep=";")
 
-# Filtre Paris
+#filtre 75
 paris = df[df["CODGEO_2025"].str.startswith("751", na=False)].copy()
 print(f"Lignes Paris brut : {len(paris)}")
 print(f"Valeurs est_diffuse : {paris['est_diffuse'].unique()}")
 
-# Filtre diffusé
+#nettoyer les données non diffusée
 paris = paris[paris["est_diffuse"] == "diff"]
 print(f"Lignes Paris diffusées : {len(paris)}")
 
-# Nettoyage
+#nettoyage on isole les numero d'arrondissement
 paris["arrondissement"] = paris["CODGEO_2025"].str[-2:].astype(int)
 paris["nombre"] = pd.to_numeric(paris["nombre"], errors="coerce")
 
-# Agréger
+#agreger par delit et arrondissement
 result = paris.groupby("arrondissement")["nombre"].sum().reset_index()
 result.columns = ["arrondissement", "total_delits"]
 
 os.makedirs("data/silver", exist_ok=True)
 result.to_csv("data/silver/criminalite.csv", index=False)
-print(f"✓ Silver sauvegardé — {len(result)} arrondissements")
+print(f"Silver sauvegardé — {len(result)} arrondissements")
 print(result)
