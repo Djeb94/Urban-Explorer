@@ -39,16 +39,19 @@ def get_ind1_arr(arrondissement: int):
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
 # ── Indicateur 2 : Pression immobilière ──────────────────────────
-@app.get("/ind2", tags=["Pression immobilière"])
+@app.get("/ind2", tags=["Vivabilité urbaine"])
 def get_ind2():
     with engine.connect() as conn:
-        df = pd.read_sql("SELECT * FROM ind2_pression", conn)
+        df = pd.read_sql("SELECT * FROM ind2_vivabilite", conn)
     return df.to_dict(orient="records")
 
-@app.get("/ind2/{arrondissement}", tags=["Pression immobilière"])
+@app.get("/ind2/{arrondissement}", tags=["Vivabilité urbaine"])
 def get_ind2_arr(arrondissement: int):
     with engine.connect() as conn:
-        df = pd.read_sql(text("SELECT * FROM ind2_pression WHERE arrondissement = :arr"), conn, params={"arr": arrondissement})
+        df = pd.read_sql(
+            text("SELECT * FROM ind2_vivabilite WHERE arrondissement = :arr"),
+            conn, params={"arr": arrondissement}
+        )
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
 # ── Indicateur 3 : Attractivité ───────────────────────────────────
