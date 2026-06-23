@@ -16,6 +16,8 @@ export default function App() {
   const [compared, setCompared] = useState(null)
   const [indicateur, setIndicateur] = useState("accessibilite_achat")
   const [compareMode, setCompareMode] = useState(false)
+  const [activeCouche, setActiveCouche] = useState(null)
+  const [coucheData, setCoucheData] = useState([])
 
   useEffect(() => {
     axios.get(`${API}/ind1`).then(res => setInd1(res.data))
@@ -23,6 +25,17 @@ export default function App() {
     axios.get(`${API}/ind3`).then(res => setInd3(res.data))
     axios.get(`${API}/ind4`).then(res => setInd4(res.data))
   }, [])
+
+  useEffect(() => {
+    if (!activeCouche) { setCoucheData([]); return }
+    const routes = {
+      criminalite: "/criminalite",
+      logements_sociaux: "/logements-sociaux",
+      espaces_verts: "/espaces-verts",
+      stations: "/stations"
+    }
+    axios.get(`${API}${routes[activeCouche]}`).then(res => setCoucheData(res.data))
+  }, [activeCouche])
 
   const getData = () => {
     if (indicateur === "accessibilite_achat") return ind1
@@ -54,6 +67,8 @@ export default function App() {
         setCompareMode={setCompareMode}
         setSelected={setSelected}
         setCompared={setCompared}
+        activeCouche={activeCouche}
+        setActiveCouche={setActiveCouche}
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
@@ -63,15 +78,13 @@ export default function App() {
             compared={compared}
             setSelected={handleSelect}
             indicateur={indicateur}
+            activeCouche={activeCouche}
+            coucheData={coucheData}
           />
         </div>
         {compareMode && selected && compared && (
           <div style={{ height: 280, flexShrink: 0 }}>
-            <Compare
-              selected={selected}
-              compared={compared}
-              indicateur={indicateur}
-            />
+            <Compare selected={selected} compared={compared} indicateur={indicateur} />
           </div>
         )}
       </div>

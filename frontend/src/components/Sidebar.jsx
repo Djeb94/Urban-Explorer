@@ -11,7 +11,14 @@ const INDICATEURS = [
   { value: "mixite_sociale",      label: "Mixité sociale",           route: "ind4" }
 ]
 
-export default function Sidebar({ data, selected, compared, indicateur, setIndicateur, compareMode, setCompareMode, setSelected, setCompared }) {
+const COUCHES = [
+  { value: "criminalite",        label: "Criminalité",        color: "#ef4444" },
+  { value: "logements_sociaux",  label: "Logements sociaux",  color: "#22c55e" },
+  { value: "espaces_verts",      label: "Espaces verts",      color: "#84cc16" },
+  { value: "stations",           label: "Transports RATP",    color: "#f59e0b" },
+]
+
+export default function Sidebar({ data, selected, compared, indicateur, setIndicateur, compareMode, setCompareMode, setSelected, setCompared, activeCouche, setActiveCouche }) {
   const [detail, setDetail] = useState(null)
 
   useEffect(() => {
@@ -38,6 +45,7 @@ export default function Sidebar({ data, selected, compared, indicateur, setIndic
         </p>
       </div>
 
+      {/* Indicateurs */}
       <div style={{ marginBottom: 12 }}>
         <p style={{ fontSize: 11, color: "#8892a4", marginBottom: 8, textTransform: "uppercase" }}>
           Indicateur
@@ -55,6 +63,26 @@ export default function Sidebar({ data, selected, compared, indicateur, setIndic
         ))}
       </div>
 
+      {/* Couches superposées */}
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontSize: 11, color: "#8892a4", marginBottom: 8, textTransform: "uppercase" }}>
+          Couches
+        </p>
+        {COUCHES.map(c => (
+          <button key={c.value} onClick={() => setActiveCouche(activeCouche === c.value ? null : c.value)} style={{
+            display: "block", width: "100%", textAlign: "left",
+            padding: "8px 12px", marginBottom: 4, borderRadius: 6,
+            border: `1px solid ${activeCouche === c.value ? c.color : "transparent"}`,
+            cursor: "pointer", fontSize: 13,
+            background: activeCouche === c.value ? `${c.color}20` : "#1e2433",
+            color: activeCouche === c.value ? c.color : "#8892a4"
+          }}>
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Mode comparaison */}
       <button onClick={() => { setCompareMode(!compareMode); setCompared(null); setSelected(null) }} style={{
         display: "block", width: "100%", textAlign: "center",
         padding: "8px 12px", marginBottom: 16, borderRadius: 6,

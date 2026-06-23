@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 import os
 import pandas as pd
 from sqlalchemy import create_engine, text
@@ -20,6 +22,35 @@ app.add_middleware(
 engine = create_engine(os.getenv("POSTGRES_URL"))
 mongo  = MongoClient(os.getenv("MONGO_URL"))["urban_explorer"]
 
+# ── Scheduler : mise à jour automatique ind1 ──────────────────────
+def update_ind1():
+    print(f"[{datetime.now()}] Mise à jour ind1 en cours...")
+    try:
+        transactions = pd.read_csv("data/silver/transactions_paris.csv")
+        revenus      = pd.read_csv("data/silver/revenus_paris.csv")
+
+        prix = transactions.groupby("arrondissement")["prix_m2"].agg(
+            prix_m2_median="median",
+            prix_m2_moyen="mean",
+            nb_transactions="count"
+        ).reset_index()
+
+        df = prix.merge(revenus, on="arrondissement")
+        df["accessibilite_achat"] = (df["prix_m2_median"] * 50) / df["revenu_median"]
+        moyenne_paris = df["prix_m2_median"].median()
+        df["vs_moyenne_paris"] = ((df["prix_m2_median"] - moyenne_paris) / moyenne_paris * 100).round(2)
+        df["updated_at"] = datetime.now().isoformat()
+
+        df.to_sql("ind1_accessibilite", engine, if_exists="replace", index=False)
+        print(f"[{datetime.now()}] ind1 mis à jour — {len(df)} arrondissements")
+
+    except Exception as e:
+        print(f"[{datetime.now()}] Erreur update ind1 : {e}")
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(update_ind1, "interval", minutes=1)
+scheduler.start()
+
 # ── Test ──────────────────────────────────────────────────────────
 @app.get("/", tags=["Status"])
 def root():
@@ -32,13 +63,19 @@ def get_ind1():
         df = pd.read_sql("SELECT * FROM ind1_accessibilite", conn)
     return df.to_dict(orient="records")
 
+@app.get("/ind1/status", tags=["Accessibilité à l'achat"])
+def get_ind1_status():
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT MAX(updated_at) as last_update FROM ind1_accessibilite", conn)
+    return {"last_update": df["last_update"][0]}
+
 @app.get("/ind1/{arrondissement}", tags=["Accessibilité à l'achat"])
 def get_ind1_arr(arrondissement: int):
     with engine.connect() as conn:
         df = pd.read_sql(text("SELECT * FROM ind1_accessibilite WHERE arrondissement = :arr"), conn, params={"arr": arrondissement})
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
-# ── Indicateur 2 : Pression immobilière ──────────────────────────
+# ── Indicateur 2 : Vivabilité urbaine ────────────────────────────
 @app.get("/ind2", tags=["Vivabilité urbaine"])
 def get_ind2():
     with engine.connect() as conn:
@@ -90,6 +127,19 @@ def get_transactions(arrondissement: int):
         )
     return df.to_dict(orient="records")
 
+# ── Filtres supplémentaires (PostgreSQL) ──────────────────────────
+@app.get("/criminalite", tags=["Filtres"])
+def get_criminalite():
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT * FROM criminalite", conn)
+    return df.to_dict(orient="records")
+
+@app.get("/revenus", tags=["Filtres"])
+def get_revenus():
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT * FROM revenus", conn)
+    return df.to_dict(orient="records")
+
 # ── MongoDB ───────────────────────────────────────────────────────
 @app.get("/logements-sociaux", tags=["MongoDB"])
 def get_logements():
@@ -108,6 +158,7 @@ def get_contours():
     data = list(mongo["contours"].find({}, {"_id": 0}))
     return {"type": "FeatureCollection", "features": data}
 
+# ── Timeline ──────────────────────────────────────────────────────
 @app.get("/timeline/{arrondissement}", tags=["Timeline"])
 def get_timeline(arrondissement: int):
     with engine.connect() as conn:
