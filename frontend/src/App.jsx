@@ -27,7 +27,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!activeCouche) { setCoucheData([]); return }
+    if (!activeCouche) {
+      setCoucheData([])
+      if (!indicateur) setIndicateur("accessibilite_achat")
+      return
+    }
     const routes = {
       criminalite: "/criminalite",
       logements_sociaux: "/logements-sociaux",
@@ -37,12 +41,25 @@ export default function App() {
     axios.get(`${API}${routes[activeCouche]}`).then(res => setCoucheData(res.data))
   }, [activeCouche])
 
+  const COUCHE_KEY = {
+    criminalite:       "total_delits",
+    logements_sociaux: "total_logements_sociaux",
+    espaces_verts:     "surface_totale_m2",
+    stations:          "nb_stations"
+  }
+
   const getData = () => {
+    if (activeCouche && coucheData.length > 0) return coucheData
     if (indicateur === "accessibilite_achat") return ind1
     if (indicateur === "score_vivabilite")    return ind2
     if (indicateur === "score_attractivite")  return ind3
     if (indicateur === "mixite_sociale")      return ind4
     return ind1
+  }
+
+  const getActiveKey = () => {
+    if (activeCouche) return COUCHE_KEY[activeCouche]
+    return indicateur
   }
 
   const handleSelect = (arr) => {
@@ -61,7 +78,7 @@ export default function App() {
         data={getData()}
         selected={selected}
         compared={compared}
-        indicateur={indicateur}
+        indicateur={getActiveKey()}
         setIndicateur={setIndicateur}
         compareMode={compareMode}
         setCompareMode={setCompareMode}
@@ -77,14 +94,14 @@ export default function App() {
             selected={selected}
             compared={compared}
             setSelected={handleSelect}
-            indicateur={indicateur}
+            indicateur={getActiveKey()}
             activeCouche={activeCouche}
             coucheData={coucheData}
           />
         </div>
         {compareMode && selected && compared && (
           <div style={{ height: 280, flexShrink: 0 }}>
-            <Compare selected={selected} compared={compared} indicateur={indicateur} />
+            <Compare selected={selected} compared={compared} indicateur={getActiveKey()} />
           </div>
         )}
       </div>
