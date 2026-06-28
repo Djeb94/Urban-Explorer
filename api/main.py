@@ -48,7 +48,7 @@ def update_ind1():
         print(f"[{datetime.now()}] Erreur update ind1 : {e}")
 
 scheduler = BackgroundScheduler()
-scheduler.add_job(update_ind1, "interval", minutes=1)
+scheduler.add_job(update_ind1, "interval", weeks=1)
 scheduler.start()
 
 # ── Test ──────────────────────────────────────────────────────────
