@@ -22,7 +22,7 @@ app.add_middleware(
 engine = create_engine(os.getenv("POSTGRES_URL"))
 mongo  = MongoClient(os.getenv("MONGO_URL"))["urban_explorer"]
 
-# ── Scheduler : mise à jour automatique ind1 ──────────────────────
+#Scheduler : mise à jour automatique ind1
 def update_ind1():
     print(f"[{datetime.now()}] Mise à jour ind1 en cours...")
     try:
@@ -51,12 +51,12 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(update_ind1, "interval", weeks=1)
 scheduler.start()
 
-# ── Test ──────────────────────────────────────────────────────────
+#test
 @app.get("/", tags=["Status"])
 def root():
     return {"status": "ok", "message": "Urban Data Explorer API"}
 
-# ── Indicateur 1 : Accessibilité ─────────────────────────────────
+#Indicateur 1 : Accessibilité
 @app.get("/ind1", tags=["Accessibilité à l'achat"])
 def get_ind1():
     with engine.connect() as conn:
@@ -75,7 +75,7 @@ def get_ind1_arr(arrondissement: int):
         df = pd.read_sql(text("SELECT * FROM ind1_accessibilite WHERE arrondissement = :arr"), conn, params={"arr": arrondissement})
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
-# ── Indicateur 2 : Vivabilité urbaine ────────────────────────────
+#Indicateur 2 : Vivabilité urbaine
 @app.get("/ind2", tags=["Vivabilité urbaine"])
 def get_ind2():
     with engine.connect() as conn:
@@ -91,7 +91,7 @@ def get_ind2_arr(arrondissement: int):
         )
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
-# ── Indicateur 3 : Attractivité ───────────────────────────────────
+#Indicateur 3 : Attractivité 
 @app.get("/ind3", tags=["Score attractivité"])
 def get_ind3():
     with engine.connect() as conn:
@@ -104,7 +104,7 @@ def get_ind3_arr(arrondissement: int):
         df = pd.read_sql(text("SELECT * FROM ind3_attractivite WHERE arrondissement = :arr"), conn, params={"arr": arrondissement})
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
-# ── Indicateur 4 : Mixité sociale ────────────────────────────────
+#Indicateur 4 : Mixité sociale 
 @app.get("/ind4", tags=["Mixité sociale"])
 def get_ind4():
     with engine.connect() as conn:
@@ -117,7 +117,7 @@ def get_ind4_arr(arrondissement: int):
         df = pd.read_sql(text("SELECT * FROM ind4_mixite WHERE arrondissement = :arr"), conn, params={"arr": arrondissement})
     return df.to_dict(orient="records")[0] if not df.empty else {"error": "non trouvé"}
 
-# ── Transactions ──────────────────────────────────────────────────
+#transactions 
 @app.get("/transactions/{arrondissement}", tags=["Transactions DVF"])
 def get_transactions(arrondissement: int):
     with engine.connect() as conn:
@@ -127,7 +127,7 @@ def get_transactions(arrondissement: int):
         )
     return df.to_dict(orient="records")
 
-# ── Filtres supplémentaires (PostgreSQL) ──────────────────────────
+# Filtres supplémentaires (PostgreSQL)
 @app.get("/criminalite", tags=["Filtres"])
 def get_criminalite():
     with engine.connect() as conn:
@@ -140,7 +140,7 @@ def get_revenus():
         df = pd.read_sql("SELECT * FROM revenus", conn)
     return df.to_dict(orient="records")
 
-# ── MongoDB ───────────────────────────────────────────────────────
+#  MongoDB 
 @app.get("/logements-sociaux", tags=["MongoDB"])
 def get_logements():
     return list(mongo["logements_sociaux"].find({}, {"_id": 0}))
@@ -158,7 +158,7 @@ def get_contours():
     data = list(mongo["contours"].find({}, {"_id": 0}))
     return {"type": "FeatureCollection", "features": data}
 
-# ── Timeline ──────────────────────────────────────────────────────
+#Timeline
 @app.get("/timeline/{arrondissement}", tags=["Timeline"])
 def get_timeline(arrondissement: int):
     with engine.connect() as conn:

@@ -17,7 +17,6 @@ stations["score_transport"]   = normaliser(stations["nb_stations"])
 criminalite["score_securite"] = 1 - normaliser(criminalite["total_delits"])
 espaces["score_vert"]         = normaliser(espaces["surface_totale_m2"])
 
-# Fusion
 df = stations[["arrondissement", "nb_stations", "score_transport"]].merge(
      criminalite[["arrondissement", "total_delits", "score_securite"]], on="arrondissement").merge(
      espaces[["arrondissement", "nb_espaces_verts", "surface_totale_m2", "score_vert"]], on="arrondissement")
@@ -32,7 +31,7 @@ df["score_attractivite"] = (
 # Rang
 df["rang_attractivite"] = df["score_attractivite"].rank(ascending=False).astype(int)
 
-# Sauvegarde
+#save
 os.makedirs("data/gold", exist_ok=True)
 df.to_csv("data/gold/ind3_attractivite.csv", index=False)
 df.to_sql("ind3_attractivite", engine, if_exists="replace", index=False)
