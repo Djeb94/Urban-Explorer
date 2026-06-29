@@ -24,7 +24,6 @@ for chunk in reader:
 chunks = [c for c in chunks if not c.empty]
 df_paris = pd.concat(chunks, ignore_index=True)
 
-#choix colonnes
 colonnes = [
     "id_mutation", "date_mutation", "nature_mutation",
     "valeur_fonciere", "code_postal", "nom_commune",
@@ -40,7 +39,7 @@ df_paris = df_paris[df_paris["surface_reelle_bati"] > 0]
 df_paris["prix_m2"] = df_paris["valeur_fonciere"] / df_paris["surface_reelle_bati"]
 df_paris = df_paris[(df_paris["prix_m2"] > 1000) & (df_paris["prix_m2"] < 50000)]
 
-#arrondissement
+#arrondissement timeline
 df_paris["annee"] = pd.to_datetime(df_paris["date_mutation"]).dt.year
 df_paris["arrondissement"] = (
     df_paris["code_postal"]

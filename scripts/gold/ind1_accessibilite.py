@@ -5,7 +5,6 @@ from sqlalchemy import create_engine
 load_dotenv()
 engine = create_engine(os.getenv("POSTGRES_URL"))
 
-# Sources nécessaires
 transactions = pd.read_csv("data/silver/transactions_paris.csv")
 revenus      = pd.read_csv("data/silver/revenus_paris.csv")
 
