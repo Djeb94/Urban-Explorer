@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
+import api from "./api"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-
-const API = "http://localhost:8000"
 
 export default function Charts({ selected }) {
   const [timeline, setTimeline] = useState([])
 
   useEffect(() => {
     if (!selected) return
-    axios.get(`${API}/timeline/${selected}`).then(res => setTimeline(res.data))
+    api.get(`/timeline/${selected}`).then(res => setTimeline(res.data))
   }, [selected])
 
   if (!selected) return (

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
-import axios from "axios"
+import api from "./api"
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts"
-
-const API = "http://localhost:8000"
 
 const INDICATEURS = [
   { key: "accessibilite_achat", label: "Accessibilité", route: "ind1", max: 25 },
@@ -17,7 +15,7 @@ export default function Compare({ selected, compared }) {
 
   useEffect(() => {
     if (!selected) return
-    Promise.all(INDICATEURS.map(i => axios.get(`${API}/${i.route}/${selected}`))).then(results => {
+    Promise.all(INDICATEURS.map(i => api.get(`/${i.route}/${selected}`))).then(results => {
       const merged = {}
       results.forEach((r, i) => { merged[INDICATEURS[i].key] = r.data[INDICATEURS[i].key] })
       setDataA(merged)
@@ -26,7 +24,7 @@ export default function Compare({ selected, compared }) {
 
   useEffect(() => {
     if (!compared) return
-    Promise.all(INDICATEURS.map(i => axios.get(`${API}/${i.route}/${compared}`))).then(results => {
+    Promise.all(INDICATEURS.map(i => api.get(`/${i.route}/${compared}`))).then(results => {
       const merged = {}
       results.forEach((r, i) => { merged[INDICATEURS[i].key] = r.data[INDICATEURS[i].key] })
       setDataB(merged)

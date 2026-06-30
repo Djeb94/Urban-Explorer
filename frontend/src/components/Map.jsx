@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import maplibregl from "maplibre-gl"
 import "maplibre-gl/dist/maplibre-gl.css"
-import axios from "axios"
-
-const API = "http://localhost:8000"
+import api from "./api"
 
 const LABELS = {
   accessibilite_achat: "Accessibilité à l'achat",
@@ -38,7 +36,7 @@ export default function Map({ data, selected, compared, setSelected, indicateur,
   useEffect(() => { activeCoucheRef.current = activeCouche }, [activeCouche])
 
   useEffect(() => {
-    axios.get(`${API}/contours`).then(res => setContours(res.data))
+    api.get(`/contours`).then(res => setContours(res.data))
   }, [])
 
   useEffect(() => {

@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react"
-import axios from "axios"
+import api from "./api"
 import Charts from "./Charts"
-
-const API = "http://localhost:8000"
 
 const INDICATEURS = [
   { value: "accessibilite_achat", label: "Accessibilité à l'achat", route: "ind1" },
@@ -25,7 +23,7 @@ export default function Sidebar({ data, selected, compared, indicateur, setIndic
     if (!selected || !indicateur) return
     const route = INDICATEURS.find(i => i.value === indicateur)?.route
     if (!route) return
-    axios.get(`${API}/${route}/${selected}`).then(res => setDetail(res.data))
+    api.get(`/${route}/${selected}`).then(res => setDetail(res.data))
   }, [selected, indicateur])
 
   const sorted = [...data].sort((a, b) => b[indicateur] - a[indicateur])

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react"
-import axios from "axios"
+import api from "./components/api"
 import Map from "./components/Map"
 import Sidebar from "./components/Sidebar"
 import Compare from "./components/Compare"
 import "./App.css"
-
-const API = "http://localhost:8000"
 
 export default function App() {
   const [ind1, setInd1] = useState([])
@@ -20,10 +18,10 @@ export default function App() {
   const [coucheData, setCoucheData] = useState([])
 
   useEffect(() => {
-    axios.get(`${API}/ind1`).then(res => setInd1(res.data))
-    axios.get(`${API}/ind2`).then(res => setInd2(res.data))
-    axios.get(`${API}/ind3`).then(res => setInd3(res.data))
-    axios.get(`${API}/ind4`).then(res => setInd4(res.data))
+    api.get(`/ind1`).then(res => setInd1(res.data))
+    api.get(`/ind2`).then(res => setInd2(res.data))
+    api.get(`/ind3`).then(res => setInd3(res.data))
+    api.get(`/ind4`).then(res => setInd4(res.data))
   }, [])
 
   useEffect(() => {
@@ -38,7 +36,7 @@ export default function App() {
       espaces_verts: "/espaces-verts",
       stations: "/stations"
     }
-    axios.get(`${API}${routes[activeCouche]}`).then(res => setCoucheData(res.data))
+    api.get(`${routes[activeCouche]}`).then(res => setCoucheData(res.data))
   }, [activeCouche])
 
   const COUCHE_KEY = {
